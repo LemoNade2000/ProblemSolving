@@ -5,7 +5,7 @@ using namespace std;
 int V, E;
 vector<int> adj[10001];
 bool visited[10001];
-int visitOrder[10001];
+int visitOrder[10001];[]
 bool isCut[10001];
 int cnt;
 queue<int> ans;
