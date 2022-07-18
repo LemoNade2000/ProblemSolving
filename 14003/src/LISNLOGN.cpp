@@ -42,4 +42,5 @@ int main() {
 	for(int i = 0; i < sortedV.size(); i++){
 		cout << sortedV[i] << " ";
 	}
+	return 0;
 }
