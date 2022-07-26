@@ -107,8 +107,6 @@ int main(){
     }
     cout << N - dinik(0, 109);
     
-    void* hanbyeolGF = &hanbyeolGF;
-    
     return 0;
 }
 
