@@ -2,67 +2,69 @@
 
 using namespace std;
 
-int N;
-vector<int> adj[100001];
-struct Coordinate{
-	int x;
-	int y;
-	int z;
+typedef long long ll;
+typedef pair<int, int> pii;
+#define MOD 1000000007
+
+struct Dist{
+	int val;
+	int u, v;
 };
 
-int dist(Coordinate c1, Coordinate c2){
-	int xDiff = abs(c2.x - c1.x);
-	int yDiff = abs(c2.y - c1.y);
-	int zDiff = abs(c2.z - c1.z);
-	int minimum = min(xDiff, yDiff);
-	return min(minimum, zDiff);
+int N;
+vector<int> parent;
+vector<Dist> dist;
+int find(int node){
+	if(parent[node] == node){
+		return node;
+	}
+	else return parent[node] = find(parent[node]);
+}
+
+bool uni(int u, int v){
+	int uPar = find(u);
+	int vPar = find(v);
+	if(uPar == vPar){
+		return false;
+	}
+	else{
+		parent[uPar] = vPar;
+		return true;
+	}
+}
+
+bool comp(Dist a, Dist b){
+	if(a.val < b.val){
+		return true;
+	}
+	else return false;
 }
 
 int main() {
 	ios::sync_with_stdio(false);
 	cin.tie(NULL);
 	cin >> N;
-	vector<Coordinate> coord;
-	bool visited[100001];
+	parent = vector<int>(N, 0);
+	vector<pii> x, y, z;
+	x = y = z = vector<pii>(N);
 	for(int i = 0; i < N; i++){
-		Coordinate c;
-		cin >> c.x >> c.y >> c.z;
-		coord.push_back(c);
-		for(int j = 0; j <= i; j++){
-			if(i != j){
-			int distance = dist(coord[i], coord[j]);
-				adj[i].push_back(distance);
-				adj[j].push_back(distance);
-			}
-			else{
-				adj[i].push_back(0);
-			}
-		}
+		cin >> x[i].first >> y[i].first >> z[i].first;
+		x[i].second = y[i].second = z[i].second = i;
+		parent[i] = i;
 	}
-	priority_queue<pair<int, int>> pq;
-	int count = 0;
-	long long int ans = 0;
-	pq.push(make_pair(0, 0));
-	while(!pq.empty()){
-		int weight = -pq.top().first;
-		int dest = pq.top().second;
-		pq.pop();
-		if(visited[dest] == false){
-			count++;
-			ans += weight;
-			if(count == N){
-				break;
-			}
-			visited[dest] = true;
-			for(int i = 0; i < adj[dest].size(); i++){
-				if(visited[i] == true){
-					continue;
-				}
-				else{
-					pq.push(make_pair(-adj[dest][i], i));
-				}
-			}
+	sort(x.begin(), x.end()); sort(y.begin(), y.end()); sort(z.begin(), z.end());
+	for(int i = 1; i < N; i++){
+		dist.push_back({x[i].first - x[i - 1].first, x[i].second, x[i - 1].second});
+		dist.push_back({y[i].first - y[i - 1].first, y[i].second, y[i - 1].second});
+		dist.push_back({z[i].first - z[i - 1].first, z[i].second, z[i - 1].second});
+	}
+	sort(dist.begin(), dist.end(), comp);
+	ll ans = 0;
+	for(auto i : dist){
+		if(uni(i.u, i.v)){
+			ans += i.val;
 		}
 	}
 	cout << ans;
+	return 0;
 }
