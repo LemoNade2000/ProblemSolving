@@ -65,8 +65,19 @@ Node* sink;
 void init(){
     nodes = vector<Node*>(V + 1, 0);
     pNodes = vector<Node*>(V + 1, 0);
-    nodes[1] = new Node(1);
-    nodes[V] = new Node(V);
+    for(int i = 1; i <= V; i++){
+        nodes[i] = new Node(i);
+        pNodes[i] = new Node(i);
+        Edge* edge = new Edge(pNodes[i], nodes[i], 1, 0);
+        Edge* rEdge = new Edge(nodes[i], pNodes[i], 0, 0);
+        if(i == 1 || i == V){
+            edge->cap = 2;
+        }
+        edge->revEdge = rEdge;
+        rEdge->revEdge = edge;
+        pNodes[i]->adj.push_back(edge);
+        nodes[i]->adj.push_back(rEdge);
+    }
     src = new Node(0); sink = new Node(V + 1);
     Edge* e = new Edge(src, pNodes[1], 2, 0);
     Edge* re = new Edge(pNodes[1], src, 0, 0);
@@ -80,14 +91,6 @@ void init(){
     rse->revEdge = se;
     nodes[V]->adj.push_back(se);
     sink->adj.push_back(rse);
-    for(int i = 1; i <= V; i++){
-        nodes[i] = new Node(i);
-        pNodes[i] = new Node(i);
-        Edge* edge = new Edge(nodes[i], pNodes[i], 1, 0);
-        Edge* rEdge = new Edge(pNodes[i], nodes[i], 0, 0);
-        nodes[i]->adj.push_back(edge);
-        pNodes[i]->adj.push_back(rEdge);
-    }
     return;
 }
 
@@ -100,11 +103,18 @@ int mcmf(){
         src->parent = sink->parent = nullptr;
         src->visited = sink->visited = 0;
         for(int i = 1; i <= V; i++){
-            pNodes[i] = nodes[i]->inQ = false;
-            pNodes[i] = nodes[i]->dist = MAX;
-            pNodes[i] = nodes[i]->parent = nullptr;
-            pNodes[i] = nodes[i]->visited = 0;
-            pNodes[i] = nodes[i]->parentEdge = nullptr;
+            pNodes[i]->inQ = false;
+            pNodes[i]->dist = MAX;
+            pNodes[i]->parent = NULL;
+            pNodes[i]->visited = 0;
+            pNodes[i]->parentEdge = NULL;
+        }
+        for(int i = 1; i <= V; i++){
+            nodes[i]->inQ = false;
+            nodes[i]->dist = MAX;
+            nodes[i]->parent = NULL;
+            nodes[i]->visited = 0;
+            nodes[i]->parentEdge = NULL;
         }
         queue<Node*> q;
         src->dist = 0;
@@ -114,8 +124,10 @@ int mcmf(){
             Node* currNode = q.front();
             q.pop();
             currNode->inQ = false;
+            // cout << currNode->num << "\n";
             for(auto currEdge : currNode->adj){
                 Node* nextNode = currEdge->end;
+                // cout << currEdge->cap << " " << currEdge->flow << " " << currNode->dist << " " << currEdge->cost << " " << nextNode->dist << "\n";
                 if(currEdge->cap - currEdge->flow > 0 && currNode->dist + currEdge->cost < nextNode->dist){
                     nextNode->dist = currNode->dist + currEdge->cost;
                     nextNode->parent = currNode;
@@ -144,6 +156,7 @@ int mcmf(){
         }
         cnt++;
     }
+    cout << ans << "\n";
     return 0;
 }
 
@@ -157,10 +170,12 @@ int main(){
             cin >> start >> end >> cost;
             Edge* e = new Edge(nodes[start], pNodes[end], 1, cost);
             Edge* re = new Edge(pNodes[end], nodes[start], 0, -cost);
+            e->revEdge = re;
+            re->revEdge = e;
             nodes[start]->adj.push_back(e);
             pNodes[end]->adj.push_back(re);
         }
-
+        mcmf();
     }
     return 0;
 }
