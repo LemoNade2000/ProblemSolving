@@ -14,14 +14,12 @@ struct Node{
         this->num = num;
     }
 };
+
 struct Tree{
     int idx;
     int lazy;
     int val;
-    Tree(int idx){
-        this->idx = idx;
-    }
-}
+};
 
 typedef long long ll;
 typedef pair<int, int> pii;
@@ -29,7 +27,7 @@ typedef pair<int, int> pii;
 
 int N, M;
 vector<Node*> sales;
-vector<Tree*> tree;
+vector<Tree> tree;
 int cnt;
 
 void dfs(int node){
@@ -43,40 +41,49 @@ void dfs(int node){
 }
 
 int update(int start, int end, int left, int right, int idx, int diff){
-    if(tree[idx]->lazy != 0){
-        tree[idx]->val += (end - start + 1) * tree[idx]->lazy;
+    if(tree[idx].lazy != 0){
+        tree[idx].val += (end - start + 1) * tree[idx].lazy;
         if(start != end){
-            tree[idx << 1]->lazy += tree[idx]->lazy;
-            tree[(idx << 1) + 1]->lazy += tree[idx]->lazy;
+            tree[idx << 1].lazy += tree[idx].lazy;
+            tree[(idx << 1) + 1].lazy += tree[idx].lazy;
         }
-        tree[idx]->lazy = 0;
+        tree[idx].lazy = 0;
     }
     if(start > right || end < left){
         return 0;
     }
     if(start >= left && end <= right){
-        tree[idx]->val += (end - start + 1) * diff;
+        tree[idx].val += (end - start + 1) * diff;
         if(start != end){
-            tree[idx << 1]->lazy += diff;
-            tree[(idx << 1) + 1]->lazy += diff;
+            tree[idx << 1].lazy += diff;
+            tree[(idx << 1) + 1].lazy += diff;
         }
         return 0;
     }
     int mid = (start + end) / 2;
     update(start, mid, left, right, (idx << 1) , diff);
     update(mid + 1, end, left, right, (idx << 1) + 1, diff);
-    tree[idx]->val = tree[idx << 1]->val + tree[(idx << 1) + 1]->val;
+    tree[idx].val = tree[idx << 1].val + tree[(idx << 1) + 1].val;
     return 0;
 }
 
 int query(int start, int end, int point, int idx){
-    if(tree[idx]->lazy != 0){
-        tree[idx]
+    if(tree[idx].lazy != 0){
+        tree[idx].val += (end - start + 1) * tree[idx].lazy;
+        if(start != end){
+            tree[idx << 1].lazy += tree[idx].lazy;
+            tree[(idx << 1) + 1].lazy += tree[idx].lazy;
+        }
+        tree[idx].lazy = 0;
     }
     if(point < start || point > end){
         return 0;
     }
-
+    else if(start == point && end == point){
+        return tree[idx].val;
+    }
+    int mid = (start + end) / 2;
+    return query(start, mid, point, idx << 1) + query(mid + 1, end, point, (idx << 1) + 1);
 }
 
 int main(){
@@ -99,12 +106,7 @@ int main(){
     cnt = 1;
     dfs(1);
     int height = ceil(log2(N));
-    tree = vector<Tree*>((1 << (height + 1)));
-    int tN = 1;
-    for(auto i : tree){
-        i = new Tree(tN);
-        tN++;
-    }
+    tree = vector<Tree>((1 << (height + 1)));
     for(int q = 0; q < M; q++){
         int op;
         cin >> op;
@@ -116,7 +118,7 @@ int main(){
         else if(op == 2){
             int s;
             cin >> s;
-            query(1, N, s, 1);
+            cout << query(1, N, sales[s]->start, 1) << "\n";
         }
     }
     return 0;
