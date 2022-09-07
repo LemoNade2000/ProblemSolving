@@ -6,10 +6,9 @@ typedef long long ll;
 typedef pair<int, int> pii;
 #define MOD 1000000007
 
-class Point{
-    public:
-        int idx;
-        ll x, y;
+struct Point{
+    ll x, y;
+    int idx;
 };
 
 int TC;
@@ -50,86 +49,80 @@ bool compCounterClockwise(Point &p1, Point &p2){
 }
 
 void getConvex(vector<Point> &originPoints, vector<Point> &hull, int num){
-    if(num == 1){
-        hull.push_back(originPoints[0]);
+    if(num == 0){
         return;
     }
-    else if(num == 0){
+    else if(num == 1){
+        hull.push_back(originPoints[0]);
         return;
     }
     stack<Point> s;
     sort(originPoints.begin(), originPoints.end(), compY);
     setPoint = originPoints[0];
-    sort(++originPoints.begin(), originPoints.end(), compCounterClockwise);
-    s.push(originPoints[0]);
-    s.push(originPoints[1]);
-    Point first, second;
-    for(int i = 2; i < num; i++){
-        while(s.size() >= 2){
-            second = s.top();
-            s.pop();
-            first = s.top();
-            if(ccw(first, second, originPoints[i]) > 0){
-                s.push(second);
-                break;
-            }
-        }
-        s.push(originPoints[i]);
-    }
-    while(!s.empty()){
-        hull.push_back(s.top());
-        s.pop();
-    }
-    reverse(hull.begin(), hull.end());
+    sort(originPoints.begin() + 1, originPoints.end(), compCounterClockwise);
+	for(auto i : originPoints){
+		while (hull.size() >= 2 && ccw(i, hull[hull.size() - 2], hull.back()) <= 0) hull.pop_back();
+		hull.push_back(i);
+	}
     return;
 }
 
-bool checkInLine(Point &point, Point &p1, Point &p2){
-    if(point.x < min(p1.x, p2.x) || point.x > max(p1.x, p2.x)){
-        return false;
+bool checkInner(Point &point, vector<Point> &hull){
+    int cross = 0;
+    int hS = hull.size();
+    pair<double, double> pp = {point.x, point.y};
+    for(int i = 0; i < hS; i++){
+        pair<double, double> ii, jj;
+        ii = {hull[i].x, hull[i].y}; jj = {hull[(i + 1) % hS].x, hull[(i + 1) % hS].y};
+        if((hull[i].y < point.y) ^ (hull[(i + 1) % hS].y < point.y)){
+            double xPoint = (jj.first - ii.first) * (pp.second - ii.second) / (jj.second - ii.second) + ii.first;
+            if(pp.first < xPoint){
+                cross++;
+            }
+        }
     }
-    if(point.y < min(p1.y, p2.y) || point.y > max(p1.y, p2.y)){
-        return false;
-    }
-    if((((long double)p2.y - p1.y) / ((long double)p2.x - p1.x)) == (((long double)p2.y - point.y) / ((long double)p2.x - point.x))){
-        return true;
-    }
-    return false;
+    return (cross % 2) > 0;
 }
 
-bool check(Point &point, vector<Point> &hull){
-    if(hull.size() == 1){
-        return false;
+bool disjoint(ll a, ll b, ll c, ll d){
+    if(a > b){
+        swap(a, b);
     }
-    int cross = 0;
-    Point rightEnd;
-    rightEnd.x = 10001;
-    rightEnd.y = point.y;
-    for(int i = 0; i < hull.size(); i++){
-        Point p1 = hull[i];
-        Point p2 = hull[(i + 1) % hull.size()];
-        if(checkInLine(point, p1, p2)){
-            return true;
-        }
-        if(ccw(point, p1, p2) * ccw(rightEnd, p1, p2) <= 0 && ccw(p1, point, rightEnd) * ccw(p2, point, rightEnd) <= 0){
-            if(ccw(point, p1, p2) * ccw(rightEnd, p1, p2) == 0 && ccw(p1, point, rightEnd) * ccw(p2, point, rightEnd) == 0){
-                continue;
-            }
-            cross++;
-        }
+    if(c > d){
+        swap(c, d);
     }
-    if(cross % 2){
+    if(b < c || a > d){
         return true;
     }
-    return false;
+    else return false;
+}
+
+bool check(Point &a, Point &b, Point &c, Point &d){
+    ll abc = ccw(c, a, b);
+    ll abd = ccw(d, a, b);
+    ll cda = ccw(a, c, d);
+    ll cdb = ccw(b, c, d);
+    if(abc * abd == 0 && cda * cdb == 0){
+        if(!disjoint(a.x, b.x, c.x, d.x) && !disjoint(a.y, b.y, c.y, d.y)){
+            return true;
+        }
+        else return false;
+    }
+    if(abc * abd <= 0 && cda * cdb <= 0){
+        return true;
+    }
+    else return false;
 }
 
 int solve(){
+    black.clear();
+    white.clear();
+    blackHull.clear();
+    whiteHull.clear();
+    bool flag = true;
     cin >> N >> M;
     black = vector<Point>(N);
     white = vector<Point>(M);
-    blackHull.clear();
-    whiteHull.clear();
     for(int i = 0; i < N; i++){
         black[i].idx = i;
         ll x, y;
@@ -148,72 +141,43 @@ int solve(){
         cout << "YES\n";
         return 0;
     }
+    if(N + M <= 2){
+        cout << "YES\n";
+        return 0;
+    }
     getConvex(black, blackHull, N);
     getConvex(white, whiteHull, M);
-    if(whiteHull.size() >= 3){
-        for(int i = 0; i < blackHull.size(); i++){
-            if(check(blackHull[i] ,whiteHull)){
-                cout << "NO\n";
-                return 0;
-            }
+    // for(auto i : blackHull){
+    //     cout << i.x << " " << i.y << "\n";
+    // }
+    for(int i = 0; i < whiteHull.size(); i++){
+        if(checkInner(whiteHull[i], blackHull)){
+            flag = false;
         }
     }
-    if(blackHull.size() >= 3){
-        for(int i = 0; i < whiteHull.size(); i++){
-            if(check(whiteHull[i], blackHull)){
-                cout << "NO\n";
-                return 0;
-            }
+
+    for(int i = 0; i < blackHull.size(); i++){
+        if(checkInner(blackHull[i], whiteHull)){
+            flag = false;
         }
     }
-    for(auto i : blackHull){
+    for(int i = 0; i < blackHull.size(); i++){
         for(int j = 0; j < whiteHull.size(); j++){
-            if(checkInLine(i, whiteHull[j], whiteHull[(j + 1) % whiteHull.size()])){
-                cout << "NO\n";
-                return 0;
+            int ip = (i + 1) % blackHull.size();
+            int jp = (j + 1) % whiteHull.size();
+            if(check(blackHull[i], blackHull[ip], whiteHull[j], whiteHull[jp])){
+                flag = false;
             }
         }
     }
-    for(auto i : whiteHull){
-        for(int j = 0; j < blackHull.size(); j++){
-            if(checkInLine(i, blackHull[j], blackHull[(j + 1) % blackHull.size()])){
-                cout << "NO\n";
-                return 0;
-            }
-        }
+    if(flag){
+        cout << "YES\n";
+        return 0;
     }
-    if(whiteHull.size() < 3 && blackHull.size() < 3){
-        Point a, b, c, d;
-        a = b = blackHull[0];
-        c = d = whiteHull[0];
-        if(blackHull.size() == 2){
-            b = blackHull[1];
-        }
-        if(whiteHull.size() == 2){
-            d = whiteHull[1];
-        }
-        ll ab = ccw(c, a, b) * ccw(d, a, b);
-        ll cd = ccw(a, c, d) * ccw(b, c, d);
-        if(ab == 0 && cd == 0){
-            if(checkInLine(a, c, d) || checkInLine(b, c, d) || checkInLine(c, a, b) || checkInLine(d, a, b)){
-                cout << "NO\n";
-                return 0;
-            }
-            else{
-                cout << "YES\n";
-                return 0;
-            }
-        }
-        else if(ab <= 0 && cd <= 0){
-            cout << "NO\n";
-            return 0;
-        }
-        else{
-            cout << "YES\n";
-            return 0;
-        }
+    else{
+        cout << "NO\n";
+        return 0;
     }
-    cout << "YES\n";
     return 0;
 }
 
