@@ -38,6 +38,81 @@ vector<Node*> people;
 vector<Node*> work;
 vector<int> canDo[1001];
 
+bool bfs(){
+    root->level = -1; secRoot->level = -1; dest->level = -1;
+    for(int i = 1; i <= N; i++){
+        people[i]->level = -1;
+    }
+    for(int i = 1; i <= M; i++){
+        work[i]->level = -1;
+    }
+    queue<Node*> q;
+    q.push(origin);
+    origin->level = 1;
+    while(!q.empty()){
+        Node* node = q.front();
+        q.pop();
+        for(auto next : node->adj){
+            if((next->end)->level == -1 && next->cap - next->flow > 0){
+                next->end->level = node->level + 1;
+                q.push(next->end);
+            }
+        }
+    }
+    if(dest->level == -1){
+        return false;
+    }
+    return true;
+}
+
+int dfs(Node* curr, Node* end, int minF){
+    if(curr == end){
+        return minF;
+    }
+//    cout << curr->num << " " << curr->level << "\n";
+    for(int &i = curr->lastEdge; i < curr->adj.size(); i++){
+        Edge* next = curr->adj[i];
+    //    cout << next->flow << "\n";
+        if(next->end->level == curr->level + 1 && next->cap - next->flow > 0){
+            int ret = dfs(next->end, end, min(minF, next->cap - next->flow));
+            if(ret > 0){
+                next->flow += ret;
+                Edge* e = new Edge;
+                e->start = next->end;
+                e->end = next->start;
+                e->cap = ret;
+                e->flow = e->revFlow = 0;
+                next->end->adj.push_back(e);
+            //    cout << "flow" << next->flow << "\n";
+                return ret;
+            }
+        }
+    }
+    curr->lastEdge = curr->adj.size();
+    return 0;
+}
+
+int dinic(){
+    int ans = 0;
+    while(bfs()){
+        origin->lastEdge = root->lastEdge = secRoot->lastEdge = dest->lastEdge = 0;
+        for(int i = 1; i <= N; i++){
+            people[i]->lastEdge = 0;
+        }
+        for(int i = 1; i <= M; i++){
+            work[i]->lastEdge = 0;
+        }
+        while(true){
+            int temp = dfs(origin, dest, INT_MAX);
+            if(temp == 0){
+                break;
+            }
+            ans += temp;
+        }
+    }
+    return ans;
+}
+
 int main(){
     ios::sync_with_stdio(false);
     cin.tie(NULL);
