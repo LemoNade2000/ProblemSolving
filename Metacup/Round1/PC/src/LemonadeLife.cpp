@@ -7,48 +7,48 @@ typedef pair<int, int> pii;
 #define MOD 1000000007
 
 struct Point{
-    ll x, y;
+    ll x, y;    
 };
 
 int TC;
 ofstream out;
 ifstream in;
 ll N, K, D;
-vector<Point*> house;
-vector<Point*> hull;
-Point* setPoint;
+vector<Point> house;
+vector<Point> hull;
+Point setPoint;
 ll ans;
 
-ll dist(Point* a, Point* b){
-    return (b->y - a->y) * (b->y - a->y) + (b->x - a->x) * (b->x - a->x);
+ll dist(Point &a, Point &b){
+    return (b.y - a.y) * (b.y - a.y) + (b.x - a.x) * (b.x - a.x);
 }
 
 ll crossProduct(int x1, int y1, int x2, int y2){
     return abs(x1 * y2 - x2 * y1);
 }
 
-ll ccw(Point* p1, Point* p2, Point* p3){
-	return p1->x * p2->y + p2->x * p3->y + p3->x * p1->y - p2->x * p1->y - p3->x * p2->y - p1->x * p3->y;
+ll ccw(Point &p1, Point &p2, Point &p3){
+	return p1.x * p2.y + p2.x * p3.y + p3.x * p1.y - p2.x * p1.y - p3.x * p2.y - p1.x * p3.y;
 }
 
-bool compY(Point* p1, Point* p2){
-	if(p1->y != p2->y){
-		return p1->y < p2->y;
+bool compY(Point &p1, Point &p2){
+	if(p1.y != p2.y){
+		return p1.y < p2.y;
 	}
 	else{
-		return p1->x < p2->x;
+		return p1.x < p2.x;
 	}
 }
 
-bool compCounterClockwise(Point* p1, Point* p2){
+bool compCounterClockwise(Point &p1, Point &p2){
 	ll cc = ccw(setPoint, p1, p2);
 	if(cc != 0){
-		return cc > 0; // if cc > 0, p2 is on the left-side of p[0] p[1] vector, so it must be bigger than p1->
+		return cc > 0; // if cc > 0, p2 is on the left-side of p[0] p[1] vector, so it must be bigger than p1.
 	}
-	else return (p1->x + p1->y) < (p2->x + p2->y); // if on same line, return one with less distance
+	else return (p1.x + p1.y) < (p2.x + p2.y); // if on same line, return one with less distance
 }
 
-void getConvex(vector<Point*> &originPoints, vector<Point*> &hull, int num){
+void getConvex(vector<Point> &originPoints, vector<Point> &hull, int num){
     if(num == 0){
         return;
     }
@@ -67,8 +67,8 @@ void getConvex(vector<Point*> &originPoints, vector<Point*> &hull, int num){
     return;
 }
 
-bool compX(Point* a, Point* b){
-    if(a->x < b->x){
+bool compX(Point &a, Point &b){
+    if(a.x < b.x){
         return true;
     }
     else return false;
@@ -78,11 +78,10 @@ int solve(){
     in >> N >> K >> D;
     ll D2 = D * D;
     ans = 0;
-    house = vector<Point*>(N);
+    house = vector<Point>(N);
     hull.clear();
     for(int i = 0; i < N; i++){
-        house[i] = new Point;
-        in >> house[i]->x >> house[i]->y;
+        in >> house[i].x >> house[i].y;
     }
     getConvex(house, hull, N);
     sort(hull.begin(), hull.end(), compX);
@@ -90,7 +89,7 @@ int solve(){
     adj = vector<vector<pair<int, ll>>>(hull.size());
     for(int i = 0; i < hull.size(); i++){
         for(int j = i + 1; j < hull.size(); j++){
-            if(hull[j]->x - hull[i]->x > D){
+            if(hull[j].x - hull[i].x > D){
                 break;
             }
             if(dist(hull[i], hull[j]) > D2){
@@ -99,7 +98,7 @@ int solve(){
             adj[i].push_back({j, max(K, dist(hull[i], hull[j]))});
         }
     }
-    priority_queue<pair<int, ll>> pq;
+    priority_queue<pair<ll, int>> pq;
     vector<ll> dist;
     dist = vector<ll>(hull.size(), LLONG_MAX);
     pq.push({0, 0});
@@ -118,7 +117,7 @@ int solve(){
             ll nextCost = cost + adj[idx][i].second;
             if(dist[nextIdx] > nextCost){
                 dist[nextIdx] = nextCost;
-                pq.push({ -nextCost, nextIdx});
+                pq.push({-nextCost, nextIdx});
             }
         }
     }
