@@ -9,71 +9,66 @@ typedef pair<int, int> pii;
 
 struct Node{
     int lazy, val;
-    Node(){
-        this->lazy = 0;
-        this->val = 0;
-    }
 };
 
 int C, O, N;
 vector<Node> minTree;
 vector<Node> maxTree;
-vector<Node> tree;
 
 int updateMin(int start, int end, int left, int right, int idx, int diff){
     if(minTree[idx].lazy != 0){
         minTree[idx].val += minTree[idx].lazy;
         if(start != end){
-            minTree[idx << 1].lazy += minTree[idx].lazy;
-            minTree[(idx << 1) + 1].lazy += minTree[idx].lazy;
+            minTree[idx * 2].lazy += minTree[idx].lazy;
+            minTree[(idx * 2) + 1].lazy += minTree[idx].lazy;
         }
         minTree[idx].lazy = 0;
     }
     if(start > right || end < left){
-        return INT_MAX;
+        return minTree[idx].val;
     }
     else if(start >= left && end <= right){
         minTree[idx].val += diff;
         if(start != end){
-            minTree[idx << 1].lazy += diff;
-            minTree[(idx << 1) + 1].lazy += diff;
+            minTree[idx * 2].lazy += diff;
+            minTree[(idx * 2) + 1].lazy += diff;
         }
         return minTree[idx].val;
     }
     int mid = (start + end) / 2;
-    return minTree[idx].val = min(updateMin(start, mid, left, right, idx << 1, diff), updateMin(mid + 1, end, left, right, (idx << 1) + 1, diff));
+    return minTree[idx].val = min(updateMin(start, mid, left, right, idx * 2, diff), updateMin(mid + 1, end, left, right, (idx * 2) + 1, diff));
 }
 
 int updateMax(int start, int end, int left, int right, int idx, int diff){
     if(maxTree[idx].lazy != 0){
         maxTree[idx].val += maxTree[idx].lazy;
         if(start != end){
-            maxTree[idx << 1].lazy += maxTree[idx].lazy;
-            maxTree[(idx << 1) + 1].lazy += maxTree[idx].lazy;
+            maxTree[idx * 2].lazy += maxTree[idx].lazy;
+            maxTree[(idx * 2) + 1].lazy += maxTree[idx].lazy;
         }
         maxTree[idx].lazy = 0;
     }
     if(start > right || end < left){
-        return INT_MIN;
+        return maxTree[idx].val;
     }
     else if(start >= left && end <= right){
         maxTree[idx].val += diff;
         if(start != end){
-            maxTree[idx << 1].lazy += diff;
-            maxTree[(idx << 1) + 1].lazy += diff;
+            maxTree[idx * 2].lazy += diff;
+            maxTree[(idx * 2) + 1].lazy += diff;
         }
         return maxTree[idx].val;
     }
     int mid = (start + end) / 2;
-    return maxTree[idx].val = max(updateMax(start, mid, left, right, idx << 1, diff), updateMax(mid + 1, end, left, right, (idx << 1) + 1, diff));
+    return maxTree[idx].val = max(updateMax(start, mid, left, right, idx * 2, diff), updateMax(mid + 1, end, left, right, (idx * 2) + 1, diff));
 }
 
 int queryMin(int start, int end, int left, int right, int idx){
     if(minTree[idx].lazy != 0){
         minTree[idx].val += minTree[idx].lazy;
         if(start != end){
-            minTree[idx << 1].lazy += minTree[idx].lazy;
-            minTree[(idx << 1) + 1].lazy += minTree[idx].lazy;
+            minTree[idx * 2].lazy += minTree[idx].lazy;
+            minTree[(idx * 2) + 1].lazy += minTree[idx].lazy;
         }
         minTree[idx].lazy = 0;
     }
@@ -84,15 +79,15 @@ int queryMin(int start, int end, int left, int right, int idx){
         return minTree[idx].val;
     }
     int mid = (start + end) / 2;
-    return min(queryMin(start, mid, left, right, idx << 1), queryMin(mid + 1, end, left, right, (idx << 1) + 1));
+    return min(queryMin(start, mid, left, right, idx * 2), queryMin(mid + 1, end, left, right, (idx * 2) + 1));
 }
 
 int queryMax(int start, int end, int left, int right, int idx){
     if(maxTree[idx].lazy != 0){
         maxTree[idx].val += maxTree[idx].lazy;
         if(start != end){
-            maxTree[idx << 1].lazy += maxTree[idx].lazy;
-            maxTree[(idx << 1) + 1].lazy += maxTree[idx].lazy;
+            maxTree[idx * 2].lazy += maxTree[idx].lazy;
+            maxTree[(idx * 2) + 1].lazy += maxTree[idx].lazy;
         }
         maxTree[idx].lazy = 0;
     }
@@ -103,7 +98,7 @@ int queryMax(int start, int end, int left, int right, int idx){
         return maxTree[idx].val;
     }
     int mid = (start + end) / 2;
-    return max(queryMax(start, mid, left, right, idx << 1), queryMax(mid + 1, end, left, right, (idx << 1) + 1));
+    return max(queryMax(start, mid, left, right, idx * 2), queryMax(mid + 1, end, left, right, (idx * 2) + 1));
 }
 
 int main(){
@@ -120,41 +115,41 @@ int main(){
             int x;
             cin >> x;
             x++;
-            cout << queryMax(x, x, 1, C, 1) << "\n";
+            cout << queryMin(1, C, x, x, 1) << "\n";
         }
-        else if(str == "change" ){
+        else if(str == "change"){
             int x, s;
             cin >> x >> s;
             x++;
-            int maximum = queryMax(x, x, 1, C, 1);
-            int minimum = queryMin(x, x, 1, C, 1);
-            cout << minimum << " " << maximum << "\n";
-            if(s > 0){
-                s = max(s, N - maximum);
+            int maximum = queryMax(1, C, x, x, 1);
+            int minimum = queryMin(1, C, x, x, 1);
+            if(s + maximum > N){
+                s = N - maximum;
             }
-            else if(s < 0){
-                s = max(s, -minimum);
+            else if(minimum + s < 0){
+                s = -minimum;
             }
-            updateMin(x, x, 1, C, 1, s);
-            updateMax(x, x, 1, C, 1, s);
             cout << s << "\n";
+            updateMin(1, C, x, x, 1, s);
+            updateMax(1, C, x, x, 1, s);
         }
         else if(str == "groupchange"){
             int a, b, s;
             cin >> a >> b >> s;
             a++; b++;
-            int maximum = queryMax(a, b, 1, C, 1);
-            int minimum = queryMin(a, b, 1, C, 1);
-            if(s > 0){
-                s = min(s, N - maximum);
+            int maximum = queryMax(1, C, a, b, 1);
+            int minimum = queryMin(1, C, a, b, 1);
+            if(s + maximum > N){
+                s = N - maximum;
             }
-            else if(s < 0){
-                s = max(s, -minimum);
+            else if(minimum + s < 0){
+                s = -minimum;
             }
-            updateMin(a, b, 1, C, 1, s);
-            updateMax(a, b, 1, C, 1, s);
             cout << s << "\n";
+            updateMin(1, C, a, b, 1, s);
+            updateMax(1, C, a, b, 1, s);
         }
+        // cout << queryMin(1, C, 1, C, 1);
     }
     return 0;
 }
