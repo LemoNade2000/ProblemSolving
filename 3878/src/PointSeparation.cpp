@@ -6,6 +6,8 @@ typedef long long ll;
 typedef pair<int, int> pii;
 #define MOD 1000000007
 
+
+
 struct Point{
     ll x, y;
     int idx;
