@@ -12,7 +12,6 @@ pair<ld, ld> coinA, coinB;
 
 ll power(ll a, ll pow){
     ll res = 1;
-    if(a == 1) return 1;
     while(pow > 0){
         if(pow & 1 == 1){
             res = (res * a) % MOD;
